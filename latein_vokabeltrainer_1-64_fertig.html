@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Latein Vokabeltrainer</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: white;
+    color: black;
+}
+
+header {
+    background: black;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.container {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+select,
+input,
+button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 12px;
+    font-size: 18px;
+    border-radius: 10px;
+}
+
+select,
+input {
+    border: 2px solid #222;
+    background: white;
+    color: black;
+}
+
+button {
+    border: none;
+    background: black;
+    color: white;
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+#trainer {
+    display: none;
+}
+
+#frage {
+    font-size: 38px;
+    font-weight: bold;
+    text-align: center;
+    margin: 35px 0;
+    word-wrap: break-word;
+}
+
+.info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+#meldung {
+    min-height: 30px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 18px;
+}
+
+#ende {
+    display: none;
+    text-align: center;
+}
+
+#ende h2 {
+    font-size: 35px;
+}
+
+#punkteEnde {
+    font-size: 55px;
+    font-weight: bold;
+}
+
+.klein {
+    text-align: center;
+    color: #555;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Latein Vokabeltrainer</h1>
+</header>
+
+<div class="container">
+
+    <!-- START -->
+    <div id="start">
+        <h2>Wortschatz auswählen</h2>
+
+        <select id="lektion">
+            <option value="">Bitte WS auswählen</option>
+        </select>
+
+        <button onclick="starten()">Lektion starten</button>
+
+        <p class="klein">
+            Abgefragt werden die Lernwörter aus dem Buch.
+        </p>
+    </div>
+
+
+    <!-- TRAINER -->
+    <div id="trainer">
+
+        <div class="info">
+            <span>Punkte: <b id="punkte">0</b></span>
+            <span id="fortschritt">1 / 1</span>
+        </div>
+
+        <div id="frage"></div>
+
+        <input
+            id="antwort"
+            type="text"
+            placeholder="Deutsche Bedeutung eingeben"
+            autocomplete="off"
+        >
+
+        <button onclick="pruefen()">Antwort prüfen</button>
+
+        <div id="meldung"></div>
+
+        <button onclick="naechsteFrage()">Nächste Vokabel</button>
+
+        <button onclick="zurueck()">
+            Zurück zur Auswahl
+        </button>
+
+    </div>
+
+
+    <!-- ENDE -->
+    <div id="ende">
+
+        <h2>Geschafft!</h2>
+
+        <p>Deine Punktzahl:</p>
+
+        <div id="punkteEnde">0</div>
+
+        <button onclick="zurueck()">
+            Neue Lektion
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/*
+=========================================================
+VOCABULARY
+=========================================================
+Format:
+
+["Latein", "deutsche Bedeutung"]
+
+Nur Lernwörter.
+Wiederholungswörter wurden nicht aufgenommen.
+*/
+
+const vokabeln = {
+
+
+38: [
+["vetus, veteris", "alt"],
+["saevus, a, um", "schrecklich, wild, wütend"],
+["Philippus", "Philipp II."],
+["dives, divitis", "reich"],
+["diligens, diligentis", "gewissenhaft, sorgfältig"],
+["sapiens, sapientis", "klug, weise"],
+["noscere, nosco, novi", "erkennen, kennenlernen; kennen, wissen"],
+["felix, felicis", "erfolgreich, glückbringend, glücklich"],
+["multa, multorum", "vieles"],
+["multa scire", "vieles wissen"],
+["conspicere, conspicio, conspexi", "erblicken"],
+["convocare, convoco", "zusammenrufen, versammeln"],
+["nemo, neminis", "niemand"],
+["arena", "der Sand, der Kampfplatz"],
+["conicere, conicio, conieci", "zusammenwerfen, folgern, vermuten"],
+["Alexander, Alexandri", "Alexander der Große"],
+["contra", "gegen"],
+["collocare, colloco", "aufstellen, unterbringen"],
+["claudere, claudo, clausi", "schließen, abschließen, einschließen"],
+["ruere, ruo, rui", "stürzen, eilen, stürmen"],
+["vis, vim, vi", "die Gewalt, die Kraft, die Menge"]
+],
+
+
+39: [
+["auctor, auctoris", "der Anführer, der Gründer, der Autor, der Schriftsteller, der Verfasser"],
+["inter", "unter, während, zwischen"],
+["Diogenes, Diogenis", "Diogenes"],
+["decernere, decerno, decrevi", "beschließen, entscheiden"],
+["libellus", "das kleine Buch, das Heft"],
+["conscribere, conscribo, conscripsi", "aufschreiben, verfassen"],
+["copias conscribere", "Truppen ausheben, rekrutieren"],
+["Aristoteles, Aristotelis", "Aristoteles"],
+["cognoscere, cognosco, cognovi", "erkennen, kennenlernen; kennen, wissen"],
+["pauper, pauperis", "arm"],
+["tegere, tego, texi", "bedecken, schützen, verbergen"],
+["interrogare, interrogo", "fragen"],
+["maximus, a, um", "der größte, sehr groß"],
+["cogere, cogo, coegi", "sammeln, zwingen"],
+["omnia, omnium", "alles"],
+["Macedones, Macedonum", "die Makedonen"],
+["arbor, arboris", "der Baum"]
+],
+
+
+40: [
+["Athenae, Athenarum", "Athen"],
+["paulo", "um ein wenig"],
+["ante", "vorher"],
+["hic, haec, hoc", "dieser, diese, dieses hier; folgender"],
+["nuper", "neulich, vor kurzem"],
+["Persae, Persarum", "die Perser"],
+["legatus", "der Gesandte, der Bevollmächtigte"],
+["ille, illa, illud", "jener, jene, jenes; der dort"],
+["ignoscere, ignosco, ignovi", "verzeihen"],
+["iuventus, iuventutis", "die Jugend"],
+["a iuventute", "von Jugend an"],
+["pons, pontis", "die Brücke"],
+["pax, pacis", "der Frieden"],
+["malum", "das Leid, das Böse, das Unglück"],
+["fallere, fallo, fefelli", "täuschen, betrügen"],
+["promittere, promitto, promisi", "versprechen"],
+["totus, a, um", "ganz, gesamt"],
+["censere, censeo, censui", "meinen, einschätzen; seine Stimme abgeben"],
+["barbarus, a, um", "ausländisch, unzivilisiert; der Barbar"]
+],
+
+
+41: [
+["Poenus, a, um", "punisch, karthagisch; der Punier, der Karthager"],
+["res, rei", "die Angelegenheit, das Ding, die Sache"],
+["res publica", "der Staat"],
+["neglegere, neglego, neglexi", "nicht beachten, vernachlässigen"],
+["pro", "vor; anstelle von, für"],
+["proelium", "der Kampf, die Schlacht"],
+["pernicies, perniciei", "das Verderben, die Vernichtung"],
+["senex, senis", "der Greis, der alte Mann"],
+["spes, spei", "die Erwartung, die Hoffnung"],
+["ponere, pono, posui", "aufstellen, hinlegen, setzen"],
+["dies, diei", "der Tag"],
+["frangere, frango, fregi", "zerbrechen"],
+["vestis, vestis", "die Kleidung, die Kleider"],
+["mutare, muto", "verändern, verwandeln"],
+["fides, fidei", "der Glaube, die Treue, das Vertrauen"],
+["fidem servare", "die Treue, sein Wort halten"],
+["fidem dare", "sein Wort geben"]
+],
+
+
+42: [
+["consul, consulis", "der Konsul"],
+["curae esse", "Sorge bereiten, am Herzen liegen"],
+["num", "etwa?"],
+["discere, disco, didici", "lernen, erfahren"],
+["sacer, sacra, sacrum", "heilig, geweiht"],
+["alere, alo, alui", "ernähren, großziehen"],
+["efficere, efficio, effeci", "bewirken, herstellen"],
+["idem, eadem, idem", "derselbe, der gleiche"],
+["idem ... qui", "derselbe ... wie"],
+["auxilio venire", "zu Hilfe kommen"],
+["avertere, avertо, averti", "abwenden, vertreiben"],
+["deserere, desero, deserui", "im Stich lassen, verlassen"],
+["classis, classis", "die Abteilung, die Flotte"],
+["perniciei esse", "Verderben bringen"],
+["haerere, haereo, haesi", "hängen, stecken bleiben"],
+["intra", "innerhalb von"],
+["desinere, desino, desii", "aufhören"],
+["Gallus, a, um", "gallisch; der Gallier"],
+["vestigium", "die Fußsohle, die Spur, die Stelle"],
+["silentium", "das Schweigen"],
+["custos, custodis", "der Wächter, die Wächterin"],
+["arx, arcis", "die Burg"],
+["omnino", "insgesamt, überhaupt, völlig"]
+],
+
+
+43: [
+["Hamilcar, Hamilcaris", "Hamilkar"],
+["Hannibal, Hannibalis", "Hannibal"],
+["ara", "der Altar"],
+["trans", "über, jenseits von"],
+["apertus, a, um", "offen, offenkundig"],
+["odium", "der Hass"],
+["odio esse", "verhasst sein"],
+["tangere, tango, tetigi", "berühren"],
+["iurare, iuro", "schwören"],
+["dexter, dextra, dextrum", "rechts"],
+["dextra", "die Rechte, die rechte Hand"],
+["immortalis, e", "unsterblich"],
+["amicitia", "die Freundschaft"],
+["addere, addo, addidi", "hinzufügen"],
+["cupere, cupio, cupivi", "wünschen, verlangen"]
+],
+
+
+44: [
+["agmen, agminis", "das Heer, der Zug, der Marsch"],
+["oratio, orationis", "die Rede"],
+["iter, itineris", "die Reise, der Marsch, der Weg"],
+["perire, pereo, perii", "umkommen, zugrunde gehen"],
+["superesse, supersum, superfui", "überleben; übrig sein"],
+["ne ... quidem", "nicht einmal"],
+["insidiae, insidiarum", "die Falle, das Attentat, die Hinterlist"],
+["conficere, conficio, confeci", "fertig machen, beenden"],
+["usque ad", "bis zu"],
+["subire, subeo, subii", "auf sich nehmen; herangehen"],
+["Alpes, Alpium", "die Alpen"],
+["transire, transeo, transii", "durchqueren, hinübergehen, überschreiten"],
+["currere, curro, cucurri", "laufen, eilen"],
+["expellere, expello, expuli", "vertreiben, verbannen"],
+["aut", "oder"],
+["procedere, procedo, processi", "vorwärtsgehen, vorrücken"]
+],
+
+
+45: [
+["postremo", "schließlich"],
+["sui, suorum", "die Seinen, die Ihren"],
+["singulus, a, um", "je ein, jeder einzelne"],
+["ut", "dass; zu"],
+["orare, oro", "anbeten, bitten"],
+["ne", "dass nicht, nicht zu"],
+["timere", "fürchten, dass"],
+["periculum est, ne", "es besteht die Gefahr, dass"],
+["negare, nego", "leugnen, verneinen, verweigern"],
+["postulare, postulo", "fordern"],
+["ignotus, a, um", "unbekannt"],
+["praeda", "die Beute"],
+["ingens, ingentis", "gewaltig, ungeheuer"],
+["argentum", "das Silber, das Geld"],
+["quoque", "auch"],
+["victoria", "der Sieg"]
+],
+
+
+46: [
+["navigium", "das Schiff"],
+["complures, complura", "mehrere"],
+["pirata", "der Pirat, der Seeräuber"],
+["poena", "die Strafe"],
+["iudex, iudicis", "der Richter"],
+["damnare, damno", "verurteilen"],
+["ira", "der Zorn, die Wut"],
+["remanere, remaneo, remansi", "zurückbleiben"],
+["impedire, impedio", "hindern, verhindern"],
+["Sol, Solis", "Sol, die Sonne"],
+["circiter", "ungefähr"],
+["centum", "hundert"],
+["species, speciei", "der Anblick, das Aussehen, der Schein"],
+["paene", "fast"],
+["aureus, a, um", "golden, aus Gold"]
+],
+
+
+47: [
+["dux, ducis", "der Anführer, die Anführerin"],
+["quaerere, quaero, quaesivi", "erwerben wollen, suchen, fragen"],
+["atque, ac", "und, und auch"],
+["petere, peto, petivi", "aufsuchen, erstreben, bitten, verlangen; angreifen"],
+["gens, gentis", "der Familienverband, der Stamm, das Volk"],
+["Graecia", "Griechenland"],
+["socius", "der Gefährte, der Verbündete"],
+["huc", "hierher"],
+["quo", "wohin?"],
+["servire, servio", "dienen, Sklave sein"],
+["dare, do, dedi", "geben"],
+["monere, moneo, monui", "mahnen, ermahnen"],
+["arcessere, arcesso, arcessivi", "herbeirufen, holen"],
+["statuere, statuo, statui", "aufstellen, beschließen, festsetzen"],
+["terrere, terreo, terrui", "erschrecken"]
+],
+
+
+49: [
+["accidere, accido, accidi", "geschehen, sich ereignen"],
+["corpus, corporis", "der Körper, der Leichnam"],
+["quot", "wie viel? wie viele?"],
+["vulnus, vulneris", "die Wunde, der militärische Verlust"],
+["scelus, sceleris", "das Verbrechen; der Schurke"],
+["interficere, interficiо", "töten, vernichten"],
+["pectus, pectoris", "die Brust, das Herz"],
+["tempus, temporis", "die günstige Zeit, die Umstände"],
+["praeterire, praetereo, praeterii", "vorbeigehen, übergehen"],
+["certus, a, um", "sicher, bestimmt"],
+["rapere, rapio, rapui", "wegführen, rauben, wegreißen"],
+["nullus, a, um", "kein"],
+["nomen, nominis", "der Name"]
+],
+
+
+50: [
+["longus, a, um", "lang, weit"],
+["carmen, carminis", "das Gedicht, das Lied"],
+["cantare, canto", "singen, dichten"],
+["sacerdos, sacerdotis", "der Priester, die Priesterin"],
+["sanguis, sanguinis", "das Blut"],
+["hostia", "das Opfertier, das Schlachtopfer"],
+["fundere, fundo, fudi", "ausgießen, zerstreuen"],
+["torquere, torqueo, torsi", "drehen; quälen"],
+["pes, pedis", "der Fuß"],
+["prex, precis", "die Bitte, das Gebet"],
+["genus, generis", "die Abstammung, die Art, das Geschlecht"],
+["tribuere, tribuo, tribui", "schenken, zuteilen"],
+["relinquere, relinquo, reliqui", "verlassen, zurücklassen"],
+["sanctus, a, um", "ehrwürdig, heilig"],
+["Juno, Iunonis", "Juno"],
+["crimen, criminis", "das Verbrechen, der Vorwurf, die Beschuldigung"],
+["crimini dare", "zum Vorwurf machen"]
+],
+
+
+51: [
+["navis, navis", "das Schiff"],
+["Caesar, Caesaris", "Gaius Julius Caesar"],
+["animal, animalis", "das Lebewesen, das Tier"],
+["mare, maris", "das Meer"],
+["mille", "tausend"],
+["ducenti, ae, a", "zweihundert"],
+["cohors, cohortis", "die Kohorte"],
+["quingenti, ae, a", "fünfhundert"],
+["legio, legionis", "die Legion"],
+["triginta", "dreißig"],
+["quindecim", "fünfzehn"],
+["numerus", "die Zahl, die Menge"],
+["caput, capitis", "der Kopf; die Hauptstadt"],
+["turris, turris", "der Turm"],
+["moenia, moenium", "die Mauern, die Stadtmauern"],
+["Germanus, a, um", "germanisch; der Germane"],
+["fugere, fugio, fugi", "fliehen, meiden"]
+],
+
+
+52: [
+["metus, metus", "die Angst"],
+["senatus, senatus", "der Senat, die Senatsversammlung"],
+["exercitus, exercitus", "das Heer"],
+["portus, portus", "der Hafen"],
+["vultus, vultus", "das Gesicht, der Gesichtsausdruck"],
+["gemitus, gemitus", "das Seufzen, die Traurigkeit"],
+["talis, e", "derartig, ein solcher, so"],
+["manus, manus", "die Hand; die Schar von Bewaffneten"],
+["pertinere, pertineo", "betreffen, gehören zu, sich erstrecken"],
+["usus, usus", "der Nutzen, die Benutzung"],
+["uti esse", "von Nutzen sein, nützlich sein"],
+["igitur", "also, folglich"],
+["laetus, a, um", "froh; fruchtbar"]
+],
+
+
+53: [
+["Cleopatra", "Kleopatra"],
+["causa", "die Sache, die Ursache, der Grund"],
+["Venus, Veneris", "Venus"],
+["consulere, consulo", "um Rat fragen; sorgen für; gegen jemanden vorgehen"],
+["providere, provideo", "vorhersehen; sorgen für"],
+["iuvare, iuvo, iuvi", "unterstützen, helfen; erfreuen"],
+["praeesse, praesum", "leiten, an der Spitze stehen, kommandieren"],
+["res futurae", "die Zukunft"],
+["res secundae", "das Glück"],
+["res adversae", "das Unglück"],
+["parcere, parco, peperci", "schonen, verschonen"],
+["ambo, ambae, ambo", "beide"],
+["domus, domi", "das Haus"],
+["medius, a, um", "der mittlere, in der Mitte"],
+["persuadere, persuadeo", "überreden, überzeugen"]
+],
+
+
+54: [
+["calamitas, calamitatis", "der Schaden, das Unglück"],
+["Europa", "Europa"],
+["litus, litoris", "die Küste, der Strand"],
+["taurus", "der Stier"],
+["considere, considero, consedi", "sich setzen, sich niederlassen"],
+["praeclarus, a, um", "großartig"],
+["aspicere, aspicio, aspexi", "erblicken, ansehen"],
+["tangere, tango, tetigi", "berühren"],
+["tergum", "der Rücken"],
+["perterrere, perterreo", "sehr erschrecken, einschüchtern"],
+["trahere, traho, traxi", "schleppen, ziehen"],
+["gravis, e", "schwer"],
+["animadvertere, animadverto", "bemerken"],
+["constituere, constituo", "festsetzen, beschließen"],
+["at", "aber, dagegen, jedoch"],
+["deducere, deduco, deduxi", "wegführen, hinführen"],
+["amore capi", "von Liebe ergriffen werden"]
+],
+
+
+55: [
+["Daedalus", "Dädalus"],
+["Icarus", "Ikarus"],
+["somnus", "der Schlaf"],
+["excitare, excito", "erregen, ermuntern, wecken"],
+["condere, condo, condidi", "verwahren, verbergen; erbauen, gründen"],
+["mora", "der Aufenthalt, die Verzögerung"],
+["mortalis, e", "sterblich; der Mensch"],
+["retinere, retineo, retinui", "zurückhalten, festhalten, behalten"],
+["latus, a, um", "breit, ausgedehnt"],
+["volare, volo", "fliegen, eilen"],
+["adducere, adduco, adduxi", "heranführen, veranlassen"],
+["priusquam", "bevor, eher als"],
+["vitare, vito", "meiden, vermeiden"],
+["unda", "die Welle, das Gewässer"],
+["movere, moveo, movi", "bewegen, beeindrucken"],
+["aer, aeris", "die Luft"],
+["solvere, solvo, solvi", "lösen, auflösen; bezahlen"],
+["vehemens, vehementis", "energisch, heftig"]
+],
+
+
+56: [
+["Latona", "Latona"],
+["dignus, a, um", "wert, würdig"],
+["praemio dignus", "einer Belohnung würdig"],
+["ipse, ipsa, ipsum", "selbst; persönlich; gerade; sogar"],
+["Nioba", "Niobe"],
+["Tantalus", "Tantalus"],
+["superi, superiorum", "die Götter"],
+["appellare, appello", "anrufen, anreden; nennen"],
+["dicere, dico, dixi", "sagen, sprechen; nennen, bezeichnen"],
+["putare, puto", "glauben, meinen; halten für"],
+["aestimare, aestimo", "einschätzen, beurteilen; halten für"],
+["deligere, deligo, delegi", "auswählen"],
+["parere, pario, peperi", "zur Welt bringen, gebären; schaffen"],
+["gloriam parere", "sich Ruhm verschaffen"],
+["nefarius, a, um", "gottlos, verbrecherisch"],
+["potens, potentis", "mächtig, stark"],
+["ducere, duco, duxi", "führen, ziehen; halten für"]
+],
+
+
+57: [
+["Eurydice", "Eurydike"],
+["Orpheus, Orphei", "Orpheus"],
+["nubere, nubo, nupsi", "heiraten"],
+["iuveni nubere", "einen jungen Mann heiraten"],
+["coniux, coniugis", "der Gatte, die Gattin"],
+["commovere, commoveo, commovi", "bewegen, veranlassen"],
+["acerbus, a, um", "bitter, grausam, rücksichtslos"],
+["iubere, iubeo, iussi", "anordnen, befehlen"],
+["simul", "gleichzeitig, zugleich"],
+["condicio, condicionis", "die Bedingung, die Lage"],
+["vetare, veto, vetui", "verbieten"],
+["accipere, accipio, accepi", "erhalten, erfahren, annehmen"],
+["respicere, respicio, respexi", "zurückblicken, berücksichtigen"],
+["reducere, reduco, reduxi", "zurückführen, zurückziehen"],
+["flectere, flecto, flexi", "biegen, hinlenken, umstimmen"],
+["perdere, perdo, perdidi", "verlieren, verschwenden, zugrunde richten"]
+],
+
+
+58: [
+["Sisyphus", "Sisyphus"],
+["inferi, inferorum", "die Bewohner der Unterwelt; die Unterwelt"],
+["vinculum", "das Band, die Fessel; das Gefängnis"],
+["in vincula dare", "fesseln, gefangen nehmen"],
+["brevis, e", "kurz"],
+["brevi tempore", "nach kurzer Zeit, bald"],
+["Mars, Martis", "Mars"],
+["immo", "im Gegenteil, ja sogar"],
+["regere, rego, rexi", "beherrschen, leiten, lenken"],
+["premere, premo, pressi", "unterdrücken, bedrängen"],
+["obsecrare, obsecro", "anflehen, bitten"],
+["debere, debeo, debui", "müssen, sollen; schulden"],
+["effugere, effugio, effugi", "entfliehen, entkommen"],
+["saxum", "der Fels, der Stein"],
+["volvere, volvo, volvi", "rollen, wälzen; überlegen"],
+["summus mons", "der Berggipfel, die höchste Stelle des Berges"],
+["modus", "die Art, die Weise; das Maß"]
+],
+
+
+59: [
+["oraculum", "das Orakel, der Orakelspruch"],
+["opprimere, opprimo, oppressi", "bedrohen, niederwerfen, unterdrücken"],
+["ut", "dass, sodass; damit, um zu"],
+["Corinthus", "Korinth"],
+["tradere, trado, tradidi", "übergeben, überliefern"],
+["respondere, respondeo, respondi", "antworten"],
+["Oedipus", "Ödipus"],
+["Thebae, Thebarum", "Theben"],
+["pergere, pergo, perrexi", "aufbrechen; weitermachen"],
+["ne", "dass nicht, damit nicht, um nicht zu"],
+["circumdare, circumdo, circumdedi", "umgeben"],
+["adversus", "gegen"],
+["furor, furoris", "der Wahnsinn, die Wut"],
+["convertere, converto, converti", "verändern, wenden"],
+["verus, a, um", "echt, richtig, wahr"]
+],
+
+
+60: [
+["auris, auris", "das Ohr"],
+["pervenire, pervenio, perveni", "kommen zu, kommen nach"],
+["iste, ista, istud", "dieser, diese, dieses da"],
+["placidus, a, um", "friedlich, ruhig, sanft"],
+["aeternus, a, um", "ewig"],
+["invitus, a, um", "ungern, gegen den Willen"],
+["metuere, metuo, metui", "sich fürchten"],
+["comperire, comperio, comperi", "genau erfahren"],
+["fama", "der Ruf, das Gerücht"],
+["necare, neco", "töten"],
+["falsus, a, um", "falsch"],
+["frequens, frequentis", "häufig, zahlreich"],
+["sceleratus, a, um", "verbrecherisch, schändlich; der Verbrecher"],
+["praesens, praesentis", "anwesend, gegenwärtig"]
+],
+
+
+61: [
+["facinus, facinoris", "die Handlung; die Untat"],
+["impius, a, um", "gottlos, gewissenlos"],
+["deponere, depono, deposui", "niederlegen, aufgeben"],
+["sustinere, sustineo, sustinui", "ertragen, standhalten"],
+["iniurias sustinere", "die Beleidigungen ertragen"],
+["impellere, impello, impuli", "antreiben, veranlassen"],
+["protinus", "sofort"],
+["Antigona", "Antigone"],
+["aliter", "anders; sonst"],
+["religio, religionis", "der Glaube, der Aberglaube, die Religion; die Frömmigkeit"],
+["cultus, cultus", "die Bildung, die Lebensweise, Kultur; die Pflege, Verehrung"],
+["cum", "als, nachdem; weil; obwohl"],
+["occulte", "heimlich, im Verborgenen"],
+["ubi primum", "sobald"],
+["occidere, occido, occidi", "niederschlagen, töten"],
+["gerere, gero, gessi", "ausführen, führen, tragen"],
+["necesse est", "es ist notwendig"],
+["restituere, restituo, restitui", "wiederherstellen"],
+["animadvertere in", "vorgehen gegen"],
+["dimittere, dimitto, dimisi", "aufgeben, entlassen"]
+],
+
+
+62: [
+["Marcus Antonius", "Marcus Antonius"],
+["memoria", "die Erinnerung, das Gedächtnis; die Zeit"],
+["memoria tenere", "im Gedächtnis behalten"],
+["memoria patrum", "zur Zeit der Väter, früher"],
+["taberna", "der Laden, das Wirtshaus"],
+["femina", "die Frau"],
+["umquam", "jemals"],
+["legere, lego, legi", "lesen; auswählen"],
+["liber, libri", "das Buch"],
+["forma", "die Form, die Gestalt, die Schönheit"],
+["luxuria", "der Luxus, der Prunk"],
+["sinere, sino, sivi", "zulassen, erlauben"],
+["Octavius", "Octavius"],
+["umerus", "der Oberarm, die Schulter"],
+["plus, pluris", "mehr"],
+["facilis, e", "leicht"]
+],
+
+
+63: [
+["sors, sortis", "das Los, der Orakelspruch, das Schicksal"],
+["sollicitare, sollicito", "aufhetzen, beunruhigen, erregen"],
+["conficere, conficio, confeci", "fertig machen, beenden"],
+["Augustus", "Augustus"],
+["nominare, nomino", "nennen"],
+["omittere, omitto, omisi", "aufgeben, beiseite lassen"],
+["placet", "es gefällt jemandem; jemand beschließt"],
+["mihi placet", "es gefällt mir; ich beschließe"],
+["nonnulli, ae, a", "einige, manche"],
+["intus", "im Inneren, innen"],
+["recitare, recito", "vortragen, vorlesen"],
+["cognoscere, cognosco, cognovi", "erkennen, kennenlernen; kennen, wissen"],
+["princeps, principis", "der Erste, der führende Mann, der Kaiser"]
+],
+
+
+64: [
+["turbare, turbo", "durcheinanderbringen, stören"],
+["colere, colo, colui", "bewirtschaften, pflegen; verehren"],
+["agros colere", "die Felder bewirtschaften"],
+["deos colere", "die Götter verehren"],
+["rus, ruris", "das Feld, das Land; das Landgut"],
+["ruri", "auf dem Land"],
+["cessare, cesso", "zögern, rasten"],
+["ver, veris", "der Frühling"],
+["vere ineunte", "zu Beginn des Frühlings"],
+["conspectus, conspectus", "der Anblick, das Blickfeld"],
+["numen, numinis", "die Gottheit, der göttliche Wille, die Macht"],
+["equidem", "ich allerdings, freilich"],
+["incipere, incipio, coepi", "anfangen, beginnen"],
+["res gestae", "die Taten"],
+["augere, augeo, auxi", "vergrößern, vermehren"],
+["nullo cogente", "ohne Zwang"],
+["impetus, impetus", "der Angriff, der Schwung"]
+]
+
+};
+
+
+
+/* =========================================================
+   BUCH 6 – WS 1–37
+   Lernwörter aus Buch 6
+   ========================================================= */
+
+Object.assign(vokabeln, {
+48: [],
+1: [["puella","das Mädchen"],["serva","die Sklavin, die Dienerin"],["silva","der Wald"],["via","der Weg, die Straße"],["villa","das Haus, das Landhaus"],["avus","der Großvater"],["campus","das Feld, der freie Platz"],["equus","das Pferd"],["murus","die Mauer"],["servus","der Sklave, der Diener"],["vicus","das Dorf, die Gasse"],["et","und, auch"],["familia","die Familie"]],
+2: [["esse","sein, sich befinden"],["est","er (sie, es) ist"],["sunt","sie sind"],["amica","die Freundin"],["ridēre","lachen, auslachen"],["nōn","nicht"],["cūr?","warum?"],["pārēre","gehorchen"],["monēre","mahnen, ermahnen"],["dēbēre","müssen, sollen"],["quid?","was?"],["timēre","fürchten, Angst haben"],["oculus","das Auge"],["dolēre","schmerzen, wehtun"],["nunc","nun, jetzt"],["tacēre","schweigen, verschweigen"]],
+3: [["hic","hier"],["dominus","der Herr"],["ibi","dort"],["sedēre","sitzen"],["sed","aber, sondern"],["respondēre","antworten"],["augēre","vergrößern, vermehren"],["nam","denn, nämlich"],["tamen","dennoch, jedoch"],["adhūc","bis jetzt, noch"],["neque","und nicht, auch nicht"],["neque ... neque","weder ... noch"],["quis?","wer?"],["docēre","lehren, unterrichten"],["lingua","die Sprache, die Rede"]],
+4: [["gaudēre, gaudeō","sich freuen"],["amicus","der Freund"],["bene","gut"],["studēre, studeō","sich bemühen, studieren"],["tabula","die (Schreib-)Tafel, das Gemälde"],["tenēre, teneō","halten, festhalten, besitzen; beherrschen"],["praebēre, praebeō","geben, hinhalten"],["iam","schon, bereits; nun"],["primō","zuerst"],["tum","da, dann, darauf, damals"],["rēctē","richtig, zu Recht"],["nōn iam","nicht mehr"],["saepe","oft"],["numquam","niemals"],["sic","so"],["semper","immer"]],
+5: [["sonus","der Ton, der Klang, das Geräusch"],["terrēre, terreō","erschrecken"],["latēre, lateō","verborgen sein"],["subitō","plötzlich"],["gladius","das Schwert"],["scelerātus","der Verbrecher"],["flēre, fleō","weinen, beweinen"],["placēre, placeō","gefallen"],["torquēre, torqueō","drehen; quälen"],["tantum","(nachgestellt) nur"],["cui?","wem?"],["statim","sofort"],["etiam","auch, sogar"],["iterum","wiederum, zum zweiten Mal"],["itaque","deshalb"]],
+6: [["cibus","die Nahrung, die Speise, das Futter"],["habēre, habeō","haben, halten"],["aqua","das Wasser"],["complēre, compleō","anfüllen, auffüllen"],["cōpia","die Menge, der Vorrat"],["ventus","der Wind"],["dēlēre, dēleō","zerstören, vernichten"],["populus","das Volk"],["Aeolus","Äolus (Gott der Winde)"],["deus","der Gott, die Gottheit"],["nātūra","die Natur, das Wesen, die Beschaffenheit"],["fluvius","der Fluss"],["profectō","sicherlich, tatsächlich"],["grātia","der Dank"],["grātiam habēre","danken, dankbar sein"]],
+7: [["valēre, valeō","gesund sein, stark sein, Einfluss haben"],["valē! valēte!","leb wohl! lebt wohl!"],["diū","lange (Zeit)"],["lacrima","die Träne"],["vidēre, videō","sehen"],["movēre, moveō","bewegen, beeindrucken"],["mox","bald"],["tandem","endlich"],["insula","die Insel; der Wohnblock"],["Roma","Rom"],["turba","die (Menschen-)Menge"],["toga","die Toga"],["tunica","die Tunika"],["filia","die Tochter"],["laetitia","die Freude"]],
+8: [["amāre, amō","lieben"],["libenter","gerne"],["domina","die Herrin, die Dame"],["rogāre, rogō","fragen, bitten"],["labōrāre, labōrō","arbeiten, sich anstrengen"],["parāre, parō","(vor)bereiten, vorhaben (m. Inf.); erwerben"],["vocāre, vocō","rufen; nennen, benennen"],["ubi?","wo?"],["properāre, properō","eilen, sich beeilen"],["cēna","die Mahlzeit, das Essen"],["intrāre, intrō","betreten, eintreten"],["mēnsa","der (Ess-)Tisch"],["ōrnāre, ōrnō","ausstatten, schmücken"],["dēlectāre, dēlectō","erfreuen, unterhalten"],["portāre, portō","bringen, tragen"],["laudāre, laudō","loben"]],
+9: [["cēnāre, cēnō","essen"],["spectāre, spectō","betrachten, anschauen, hinsehen"],["dubitāre, dubitō","zweifeln; zögern (m. Inf.)"],["Rōmānus","der Römer, der Einwohner Roms"],["pugna","der Kampf"],["pugnāre, pugnō","kämpfen"],["superāre, superō","besiegen, überwinden, übertreffen"],["modestia","die Bescheidenheit, der Anstand"],["superbia","der Stolz, der Hochmut"],["Syria","Syrien"],["patria","die Heimat"],["prōvincia","die Provinz"],["clēmentia","die Milde, die Nachsicht"],["imperāre, imperō","befehlen, herrschen (über)"],["populīs imperāre","über (die) Völker herrschen"],["dolus","die List, die Täuschung"],["iniūria","das Unrecht, die Beleidigung; die Rechtsverletzung"],["captīvus","der Kriegsgefangene"],["filius","der Sohn"]],
+10: [["patēre, pateō","offen stehen"],["exspectāre, exspectō","warten (auf), erwarten"],["venīre, veniō","kommen"],["audīre, audiō","hören"],["nihil","nichts"],["lūdus","das Spiel; die Schule"],["scīre, sciō","wissen, kennen, verstehen"],["unde?","woher?"],["Eurōpa","Europa"],["Crēta","Kreta"],["dēsīderāre, dēsīderō","sich sehnen nach, vermissen"],["patriam dēsīderāre","sich nach der Heimat sehnen"],["nescīre, nesciō","nicht wissen, nicht kennen, nicht verstehen"],["Sicilia","Sizilien"],["Aetna","der Ätna"],["ut","wie"],["Vulcānus","Vulkan(us), Gott des Feuers"],["habitāre, habitō","wohnen, bewohnen"]],
+11: [["discipulus","der Schüler"],["ingenium","die Begabung, das Talent, der Verstand"],["cōnsilium","die Beratung, der Beschluss, der Plan, der Rat"],["hodiē","heute"],["Capitōlium","das Kapitol"],["templum","der Tempel"],["aedificium","das Gebäude"],["forum","das Forum, der Marktplatz"],["cūria","die Kurie"],["dea","die Göttin"],["Saturnus","Saturn"],["Concordia","Concordia"],["studium","die Beschäftigung, das Engagement, das Interesse"]],
+12: [["basilica","die Markthalle, die Gerichtshalle"],["ad","zu, bei, nach, an"],["ante","vor"],["umbra","der Schatten"],["post","hinter, nach"],["ōrnāmentum","der Schmuck, das Schmuckstück"],["cum","mit, zusammen mit"],["quīnque","fünf"],["sex","sechs"],["septem","sieben"],["probāre, probō","prüfen, beweisen, für gut befinden"],["pretium","der Preis, der Wert"],["indicāre, indicō","anzeigen, melden"],["sine","ohne"],["ex","aus, von ... her"],["in (Abl.)","in, an, auf, bei (wo?)"],["manēre, maneō","bleiben, (er)warten"],["in (Akk.)","in (... hinein), nach (wohin?)"]],
+13: [["ego","ich (betont)"],["tū","du (betont)"],["-ne","Partikel im direkten Fragesatz"],["vōs","ihr (betont)"],["mihi","mir"],["mē","mich"],["tēcum","mit dir"],["nōs","wir (betont)"],["vōbīscum","mit euch"],["tibi","dir"],["nōs","uns"],["nōbīs","uns"],["vōbīs","euch"],["ita","so"],["vōs","euch"],["clāmāre, clāmō","laut rufen, schreien"],["errāre, errō","umherirren, (sich) irren"],["invenīre, inveniō","finden, erfinden"],["tē","dich"],["sine mē","ohne mich"],["līberāre, līberō","befreien, freilassen"]],
+14: [["hōra","die Stunde"],["quārtus, a, um","der (die, das) vierte"],["magnus, a, um","groß, bedeutend"],["quattuor","vier"],["octō","acht"],["decem","zehn"],["imperium","der Befehl, die Herrschaft, das Reich"],["novus, a, um","neu, ungewöhnlich"],["-que","(angehängt) und"],["multus, a, um","viel"],["cūnctī, ae, a","alle (zusammen)"],["Rōmānus, a, um","römisch"],["bonus, a, um","gut, tüchtig"],["stultus, a, um","dumm"],["nārrāre, nārrō","erzählen"],["dē","von, von ... her, von ... weg, über"],["tuus, a, um","dein"],["meus, a, um","mein"],["parvus, a, um","klein, gering"]],
+15: [["magister, magistrī","der Lehrer, der Meister"],["puer, puerī","der Junge, der Bub"],["summus, a, um","der höchste, oberste"],["noster, nostra, nostrum","unser"],["vir, virī","der Mann"],["auxilium","die Hilfe"],["servāre, servō","bewahren, retten; beobachten"],["Palātium","der Palatin"],["antīquus, a, um","alt, altertümlich"],["clārus, a, um","klar, hell, berühmt"],["niger, nigra, nigrum","schwarz, dunkel"],["pulcher, pulchra, pulchrum","schön"],["autem","aber, andererseits"],["miser, misera, miserum","arm, erbärmlich, unglücklich"],["līber, lībera, līberum","frei"],["ager, agrī","der Acker, das Feld, das Gebiet"],["vester, vestra, vestrum","euer"],["vita","das Leben"]],
+16: [["duo, duae, duo","zwei; die beiden"],["carrus","der Wagen, der Karren"],["stāre, stō","stehen"],["bibere, bibō","trinken"],["dīcere, dīcō","sagen, sprechen"],["nūntius","der Bote, die Nachricht"],["mittere, mittō","(los)lassen, schicken, werfen"],["scrībere, scrībō","schreiben, beschreiben"],["relinquere, relinquō","verlassen, zurücklassen"],["dūcere, dūcō","führen, ziehen"],["ā/ab","von, von ... her"],["oppidum","die Stadt (die Kleinstadt)"],["trahere, trahō","schleppen, ziehen"],["ostendere, ostendō","zeigen, erklären"],["Campānia","Kampanien"],["Vesuvius","der Vesuv"],["per","durch, hindurch"],["vinea","der Weinberg; der Weinstock"]],
+17: [["cōnsistere, cōnsistō","stehenbleiben, haltmachen, sich aufstellen"],["facere, faciō","machen, tun, handeln"],["sacrum","das Opfer, das Heiligtum"],["sacrum facere","ein Opfer bringen, opfern"],["dēscendere, dēscendō","herabsteigen"],["nōnne?","(etwa) nicht?"],["magis","mehr"],["quam","als, wie"],["magis ... quam","mehr ... als"],["quīn?","warum nicht?"],["aspicere, aspiciō","erblicken, ansehen"],["posse, possum","können"],["pius, a, um","fromm, gerecht, pflichtbewusst"],["vinum","der Wein"],["capere, capiō","fassen, nehmen, fangen; erobern"]],
+18: [["senator, senātōris","der Senator"],["mercātor, mercātōris","der Kaufmann, der Händler"],["vendere, vendō","verkaufen"],["imperātor, imperātōris","der Befehlshaber, der Feldherr, der Kaiser"],["petere, petō","aufsuchen, erstreben, bitten, verlangen; angreifen"],["Graecus, a, um","griechisch; der Grieche"],["enim","nämlich, denn"],["adesse, adsum","da sein, helfen"],["amīcō adesse","dem Freund helfen"],["apud","bei"],["tantus, a, um","so groß, so viel"],["honor, honoris","die Ehre, das Ehrenamt"],["in honōre esse","in Ehren stehen, angesehen sein"],["uxor, uxōris","die Ehefrau"],["Pompēiānus, a, um","pompejanisch; der Pompejaner"],["licet","es ist erlaubt, es ist möglich"],["creāre, creō","erschaffen, wählen"]],
+19: [["quod","weil; dass"],["thermae, thermārum","die warmen Bäder, die Thermen"],["velle, volō","wollen"],["amor, amōris","die Liebe"],["quia","weil"],["sē","sich"],["soror, sorōris","die Schwester"],["nōlle, nōlō","nicht wollen"],["mālle, mālō","lieber wollen"],["animus","der Geist, der Mut, die Gesinnung"],["in animō habēre","im Sinn haben, vorhaben"],["mulier, mulieris","die Frau"],["quamquam","obwohl"],["sī","wenn, falls"],["plēnus, a, um","voll"],["pecūnia","das Geld, das Vermögen"],["vīgintī","zwanzig"],["fūr, furis","der Dieb"],["clāmor, clāmōris","das Geschrei, der Lärm"],["dum","während, solange, bis"]],
+20: [["salūtāre, salūtō","(be)grüßen"],["salve! salvēte!","sei(d) gegrüßt!, grüß dich/euch!"],["frāter, frātris","der Bruder"],["pater, patris","der Vater"],["māter, mātris","die Mutter"],["tam","so"],["tam ... quam","so ... wie"],["potestās, potestātis","die (Amts-)Gewalt, die Macht"],["cīvitās, cīvitātis","die Gemeinde, der Staat"],["voluntās, voluntātis","der Wille, die Absicht"],["praemium","die Belohnung, der Lohn"],["dare, dō","geben"],["servitūs, servitūtis","die Sklaverei"],["lībertās, lībertātis","die Freiheit"],["pietās, pietātis","das Pflichtgefühl, die Frömmigkeit"],["cārus, a, um","lieb, teuer, wertvoll"],["herī","gestern"]],
+21: [["Iuppiter, Iovis","Jupiter"],["caelum","der Himmel"],["terra","die Erde, das Land"],["Minerva","Minerva"],["Diana","Diana"],["bēstia","das (wilde) Tier"],["Neptūnus","Neptun"],["Mercurius","Merkur"],["cēterī, ae, a","die übrigen"],["sōlum","nur"],["existimāre, existimō","meinen, einschätzen"],["varius, a, um","bunt, verschieden, vielfältig"],["nūntiāre, nūntiō","melden"],["mortuus, a, um","gestorben, tot; der Tote"],["Tartarus","der Tartarus, die Unterwelt"]],
+22: [["amphitheatrum","das Amphitheater"],["propter","wegen"],["propter amōrem","wegen der Liebe"],["gladiātor, gladiātōris","der Gladiator"],["urbs, urbis","die Stadt; die Stadt Rom"],["pars, partis","der Teil, die Seite"],["primus, a, um","der (die, das) erste"],["ecce","schau! sieh da! schaut! seht da!"],["victor, victōris","der Sieger"],["exercēre, exerceō","üben, trainieren; quälen"],["mors, mortis","der Tod"],["dolor, dolōris","der Schmerz"],["vel","oder"],["negotium","die Aufgabe, das Geschäft; die Angelegenheit"],["interficere, interficiō","töten, vernichten"],["annus","das Jahr"],["virtūs, virtūtis","die Tapferkeit, die Tüchtigkeit, die Leistung; die Tugend"]],
+23: [["orāculum","das Orakel, der Orakelspruch"],["opprimere, opprimō","bedrohen, niederwerfen, unterdrücken"],["ut","dass, sodass; damit, um zu"],["Corinthus","Korinth"],["trādere, trādō","übergeben, überliefern"],["respondēre, respondeō","antworten"],["Oedipus","Ödipus"],["Thebae, Thebārum","Theben"],["pergere, pergō","aufbrechen; weitermachen"],["nē","dass nicht, damit nicht, um nicht zu"],["circumdare, circumdō","umgeben"],["adversus","gegen"],["furor, furōris","der Wahnsinn, die Wut"],["convertere, convertō","verändern, wenden"],["vērus, a, um","echt, richtig, wahr"]],
+24: [["mīrus, a, um","erstaunlich, sonderbar"],["anteā","vorher, früher"],["prīmum","erstens, zuerst, zum ersten Mal"],["cūrāre, cūrō","pflegen, sorgen für"],["equum cūrāre","das Pferd pflegen"],["familiam cūrāre","für die Familie sorgen"],["comprehendere, comprehendō","begreifen, ergreifen, festnehmen"],["periculum","die Gefahr"],["malus, a, um","schlecht, schlimm"],["sub (Abl.)","unter (wo?)"],["mōnstrum","das Ungeheuer"],["an","oder (im Fragesatz; etwa)"],["sub (Akk.)","unter (wohin?)"]],
+25: [["timor, timōris","die Angst, die Furcht"],["dī!","(oh) Götter!"],["cum","als (plötzlich); (immer) wenn"],["altus, a, um","hoch, tief"],["complēre, compleō, complēvī","anfüllen, auffüllen"],["vōx, vōcis","die Stimme, die Äußerung, der Laut"],["magna voce","mit lauter Stimme"],["flēre, fleō, flēvī","weinen, beweinen"],["tēctum","das Dach; das Haus"],["dēlēre, dēleō, dēlēvī","zerstören, vernichten"],["lūx, lūcis","das Licht, das Tageslicht"],["vix","kaum, (nur) mit Mühe"],["nox, noctis","die Nacht"],["nondum","noch nicht"],["posse, possum, potuī","können"],["velle, volō, voluī","wollen"],["esse, sum, fuī","sein, sich befinden"],["salūs, salūtis","die Gesundheit, die Rettung, der Gruß, das Glück"],["fuga","die Flucht"]],
+26: [["līberī, līberōrum","die Kinder"],["temptāre, temptō","angreifen; prüfen, versuchen"],["tenebrae, tenebrārum","die Dunkelheit, die Finsternis"],["iacēre, iaceō","liegen"],["cadere, cadō","fallen"],["castra, castrōrum","das Lager"],["arma, armōrum","das Gerät, die Waffen"],["factum","die Handlung, die Tat, die Tatsache"],["is, ea, id","dieser, diese, dieses; er, sie, es"],["dīc!","sag! sprich!"],["dūc!","führe!"],["Pompēi, Pompēiōrum","Pompeji"],["paulō post","(ein) wenig später"],["posteā","nachher, später"],["reliquiae, reliquiārum","das Überbleibsel, der Überrest, die Ruine"]],
+27: [["Eurystheus","Eurystheus"],["rēx, rēgis","der König"],["sedēre, sedeō, sēdī","sitzen"],["movēre, moveō, mōvī","bewegen, beeindrucken"],["Hercūlēs, Herculis","Herkules"],["venīre, veniō, vēnī","kommen"],["duodecim","zwölf"],["labor, labōris","die Arbeit, die Anstrengung"],["facere, faciō, fēcī","machen, tun, handeln"],["torquēre, torqueō, torsī","drehen; quälen"],["manēre, maneō, mānsī","bleiben, (er)warten"],["interficere, interficiō, interfēcī","töten, vernichten"],["secundus, a, um","der (die, das) zweite; günstig"],["tertius, a, um","der (die, das) dritte"],["vincere, vincō, vīcī","(be)siegen, übertreffen"],["quīntus, a, um","der (die, das) fünfte"],["Augias, Augiae","Augias"],["dīcere, dīcō, dīxī","sagen, sprechen"],["relinquere, relinquō, relīquī","verlassen, zurücklassen"],["invenīre, inveniō, invēnī","finden, erfinden"],["comprehendere, comprehendō, comprehendī","begreifen, ergreifen, festnehmen"]],
+28: [["gaudēre + Abl.","sich freuen über"],["auxilio gaudēre","sich über die Hilfe freuen"],["labōrāre + Abl.","leiden an, in Not/Sorge sein wegen"],["dolōribus labōrāre","an Schmerzen leiden"],["dolēre + Abl.","traurig sein über"],["iniūriā dolēre","über ein Unrecht traurig sein"],["carēre, careō + Abl.","frei sein von, ohne (etwas) sein, nicht haben"],["amicīs carēre","keine Freunde haben, ohne Freunde sein"],["officium","der Dienst, die Pflicht, das Pflichtgefühl"],["eō annō","in diesem Jahr"],["praestāre, praestō, praestitī + Akk.","gewähren, leisten, zeigen"],["officium praestāre","eine Pflicht leisten, erfüllen"],["līber, a, um + Abl.","frei von"],["līber (ā) timōre","frei von Angst"],["nocte","nachts"],["cadere, cadō, cecidī","fallen"],["Plūtō, Plūtōnis","Pluto"],["prohibēre, prohibeō + Abl.","abhalten (von), hindern (an)"],["(ā) lacrimīs prohibēre","von den Tränen abhalten, am Weinen hindern"],["Cerberus","Zerberus"],["etsi","auch wenn, obwohl"],["ostendere, ostendō, ostendī","zeigen, erklären"]],
+29: [["Trōiānus, a, um","trojanisch; der Trojaner, der Einwohner von Troja"],["ōra","die Küste"],["putāre, putō","glauben, meinen"],["bellum","der Krieg"],["gerere, gerō, gessī","ausführen, führen, tragen"],["bellum gerere","Krieg führen"],["certē / certō","gewiss, sicherlich"],["paulātim","allmählich"],["cēdere, cēdō, cessī","gehen, nachgeben, weichen"],["petere, petō","aufsuchen, erstreben, bitten, verlangen; angreifen"],["cōnsistere, cōnsistō, cōnstitī","stehenbleiben, haltmachen, sich aufstellen"],["alius, alia, aliud","ein anderer"],["animadvertere, animadvertō, animadvertī","bemerken"],["Lāocoön, Lāocoontis","Laokoon"],["honestus, a, um","ehrenhaft, angesehen"],["sentīre, sentiō, sēnsī","fühlen, meinen, wahrnehmen"],["cōnstat","es ist bekannt, es steht fest"]],
+30: [["Dīdō, Didōnis","Dido"],["monumentum","das Denkmal"],["cīvis, cīvis","der Bürger"],["Aenēās, Aenēae","Aeneas"],["sibi","(für) sich"],["quaerere, quaerō, quaesīvī","erwerben wollen, suchen, fragen"],["suus, a, um","sein, ihr"],["sēcum","mit sich, bei sich"],["cōgitāre, cōgitō","denken, beabsichtigen"],["convenīre, conveniō, convēnī","zusammenkommen, zusammenpassen, besuchen"],["marītus","der Ehemann"],["vīvere, vīvō, vīxī","leben"],["oportet","es gehört sich, es ist nötig"],["Carthāgō, Carthāginis","Karthago"],["fīnis, fīnis","das Ende, die Grenze, das Ziel, der Zweck; Pl. das Gebiet"]],
+31: [["Latīnī, Latīnōrum","die Latiner"],["mūnīre, mūniō","bauen, befestigen, schützen"],["circum","rings um, um ... herum"],["Latīnus","Latinus (König der Latiner)"],["dēspērāre, dēspērō","die Hoffnung aufgeben, verzweifeln"],["dē salūte dēspērāre","die Hoffnung auf Rettung aufgeben"],["Turnus","Turnus"],["spērāre, spēro","erwarten, hoffen"],["dēmōnstrāre, dēmōnstrō","beweisen, darlegen"],["audācia","die Frechheit, die Kühnheit"],["violāre, violō","verwunden, verletzen, entehren"],["ferrum","das Eisen; die Waffe"],["caedere, caedō, cecidī","fällen, töten"],["dōnāre, dōnō","schenken, beschenken"],["venia","der Gefallen; die Nachsicht, die Verzeihung"],["Italia","Italien"],["quidem","freilich, gewiss, wenigstens, zwar"],["occīdere, occīdō, occīdī","niederschlagen, töten"]],
+32: [["Faustulus","Faustulus"],["ācer, ācris, ācre","energisch, heftig, scharf"],["bibere, bibō, bibī","trinken"],["pellere, pellō, pepulī","stoßen, schlagen, (ver)treiben"],["celer, celeris, celere","schnell"],["tamquam","wie"],["signum","das Merkmal, das Zeichen; die Statue"],["Rōmulus / Rēmus","Romulus / Remus"],["iuvenis, iuvenis","der junge Mann; Adj. jung"],["comes, comitis","der (die) Begleiter(in), der Gefährte, die Gefährtin"],["miles, militis","der Soldat"],["repellere, repellō, reppulī","zurückstoßen, abweisen, vertreiben"]],
+33: [["locus","der Ort, der Platz, die Stelle"],["novem","neun"],["aspicere, aspiciō, aspexī","erblicken, ansehen"],["ūnus, a, um","einer, ein einziger"],["ūnus ē/ex","einer von"],["fortis, e","kräftig, tapfer"],["tristis, e","traurig, unfreundlich"],["dēfendere, dēfendō, dēfendī","abwehren, verteidigen (vor / gegen)"],["trēs, trēs, tria","drei"],["Amūlius","Amulius"],["accusāre, accusō","anklagen, beschuldigen"],["turpis, e","unanständig, hässlich, schändlich"],["postquam","nachdem, als"],["Numitor, Numitoris","Numitor"],["dulcis, e","angenehm, süß"],["crūdēlis, e","grausam"],["omnis, e","jeder, ganz; Pl. alle"]],
+34: [["quī, quae, quod","welcher, welche, welches; der, die, das"],["idōneus, a, um","geeignet, passend"],["dēligere, dēligō, dēlēgī","(aus)wählen"],["condere, condō, condidī","verwahren, verbergen; erbauen, gründen"],["maximē","am meisten, besonders"],["opportunus, a, um","geeignet, günstig"],["multum","sehr, viel"],["multum valēre","großen Einfluss haben"],["Aventinus","der Aventin"],["contendere, contendō, contendī","sich anstrengen, kämpfen; eilen; behaupten"],["ergō","also, deshalb"],["Līvius","Titus Livius"],["accipere, accipiō, accēpī","erhalten, erfahren, annehmen"]],
+35: [["et ... et","sowohl ... als auch"],["arcessere, arcessō, arcessīvī","herbeirufen, holen"],["commūnis, e","gemeinsam, allgemein"],["tūtus, a, um","sicher"],["hostis, hostis","der Feind (der Landesfeind)"],["occupāre, occupō","besetzen, einnehmen"],["quemadmodum","auf welche Weise, wie"],["fortūna","das Schicksal, das Glück"],["glōria","der Ruhm, die Ehre"],["inānis, e","leer, wertlos"],["crēdere, crēdō, crēdidī","glauben, anvertrauen"]],
+36: [["patrēs, patrum","die Väter, die Vorfahren; die Senatoren"],["vītam agere","ein Leben führen, leben"],["beātus, a, um","glücklich, reich"],["plēbs, plēbis","das (nicht adelige, einfache) Volk"],["resistere, resistō, restitī","stehenbleiben; Widerstand leisten"],["mōs, mōris","die Sitte, der Brauch; Moral; Pl. der Charakter"],["lēx, lēgis","das Gesetz, die Bedingung"],["appetere, appetō, appetīvī","erstreben, haben wollen; angreifen"],["aperīre, aperiō, aperuī","aufdecken, öffnen"],["Tarquiniī, Tarquiniōrum","die Tarquinier"],["quandō?","wann?"],["virgō, virginis","das Mädchen, die Jungfrau"],["parentēs, parentum","die Eltern"],["cūra","die Pflege, die Sorge"],["Tarquinius Superbus","Tarquinius Superbus"],["concēdere, concēdō, concessī","erlauben, nachgeben, zugestehen"]],
+37: [["abīre, abeō, abiī","weggehen"],["adīre, adeō, adiī","herantreten (an), bitten, aufsuchen"],["eō","dorthin; deswegen"],["concordia","die Eintracht, die Einigkeit"],["īre, eō, iī","gehen"],["inīre, ineō, iniī","hineingehen (in), beginnen"],["exīre, exeō, exiī","herausgehen, hinausgehen"],["omittere, omittō, omīsī","aufgeben, beiseite lassen"],["quō","wo, wohin"],["redīre, redeō, rediī","zurückgehen, zurückkehren"],["tribūnus","der Tribun"],["ōrdō, ōrdinis","die Ordnung, die Reihe, der Stand"],["cōnfirmāre, cōnfirmō","bekräftigen, ermutigen, stärken"]]
+});
+
+
+/*
+=========================================================
+EINSTELLUNG
+=========================================================
+*/
+
+const auswahl = document.getElementById("lektion");
+
+for (let i = 1; i <= 64; i++) {
+
+    const option = document.createElement("option");
+
+    option.value = i;
+
+    if (vokabeln[i]) {
+        option.textContent = "WS " + i;
+    } else if (i === 48) {
+        option.textContent = "WS 48 – nicht im Buch vorhanden";
+    } else {
+        option.textContent = "WS " + i + " – nicht in dieser PDF";
+    }
+
+    auswahl.appendChild(option);
+}
+
+
+/*
+=========================================================
+SPIELVARIABLEN
+=========================================================
+*/
+
+let aktuelleVokabeln = [];
+let aktuelleNummer = 0;
+let punkte = 0;
+let beantwortet = false;
+
+
+/*
+=========================================================
+STARTEN
+=========================================================
+*/
+
+function starten() {
+
+    const nummer = Number(auswahl.value);
+
+    if (!nummer) {
+        alert("Bitte zuerst einen Wortschatz auswählen.");
+        return;
+    }
+
+    if (!vokabeln[nummer]) {
+
+        alert(
+            "Für WS " + nummer +
+            " sind in der hochgeladenen PDF keine Lernwörter vorhanden."
+        );
+
+        return;
+    }
+
+    aktuelleVokabeln = [...vokabeln[nummer]];
+
+    mischen(aktuelleVokabeln);
+
+    aktuelleNummer = 0;
+    punkte = 0;
+    beantwortet = false;
+
+    document.getElementById("punkte").textContent = punkte;
+
+    document.getElementById("start").style.display = "none";
+    document.getElementById("ende").style.display = "none";
+    document.getElementById("trainer").style.display = "block";
+
+    zeigeFrage();
+}
+
+
+/*
+=========================================================
+FRAGE ANZEIGEN
+=========================================================
+*/
+
+function zeigeFrage() {
+
+    if (aktuelleNummer >= aktuelleVokabeln.length) {
+        spielEnde();
+        return;
+    }
+
+    beantwortet = false;
+
+    const vokabel = aktuelleVokabeln[aktuelleNummer];
+
+    document.getElementById("frage").textContent = vokabel[0];
+
+    document.getElementById("fortschritt").textContent =
+        (aktuelleNummer + 1) +
+        " / " +
+        aktuelleVokabeln.length;
+
+    document.getElementById("antwort").value = "";
+
+    document.getElementById("meldung").textContent = "";
+
+    document.getElementById("antwort").focus();
+}
+
+
+/*
+=========================================================
+ANTWORT PRÜFEN
+=========================================================
+*/
+
+function pruefen() {
+
+    if (beantwortet) {
+        return;
+    }
+
+    const eingabe =
+        document.getElementById("antwort").value
+        .trim()
+        .toLowerCase();
+
+    if (eingabe === "") {
+        return;
+    }
+
+    const richtig =
+        aktuelleVokabeln[aktuelleNummer][1]
+        .toLowerCase();
+
+    const erlaubteAntworten =
+        richtig
+        .split(";")
+        .map(x => x.trim());
+
+    let korrekt = false;
+
+    for (const antwort of erlaubteAntworten) {
+
+        if (
+            eingabe === antwort ||
+            eingabe.includes(antwort) ||
+            antwort.includes(eingabe)
+        ) {
+            korrekt = true;
+            break;
+        }
+    }
+
+
+    beantwortet = true;
+
+
+    if (korrekt) {
+
+        punkte++;
+
+        document.getElementById("punkte").textContent = punkte;
+
+        document.getElementById("meldung").textContent =
+            "✓ Richtig!";
+
+    } else {
+
+        document.getElementById("meldung").textContent =
+            "✗ Falsch – richtig: " + richtig;
+    }
+}
+
+
+/*
+=========================================================
+NÄCHSTE FRAGE
+=========================================================
+*/
+
+function naechsteFrage() {
+
+    if (!beantwortet) {
+        return;
+    }
+
+    aktuelleNummer++;
+
+    zeigeFrage();
+}
+
+
+/*
+=========================================================
+ENTER-TASTE
+=========================================================
+*/
+
+document.getElementById("antwort").addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Enter") {
+
+            if (!beantwortet) {
+                pruefen();
+            } else {
+                naechsteFrage();
+            }
+
+        }
+
+    }
+);
+
+
+/*
+=========================================================
+SPIEL ENDE
+=========================================================
+*/
+
+function spielEnde() {
+
+    document.getElementById("trainer").style.display = "none";
+
+    document.getElementById("ende").style.display = "block";
+
+    document.getElementById("punkteEnde").textContent =
+        punkte + " / " + aktuelleVokabeln.length;
+}
+
+
+/*
+=========================================================
+ZURÜCK
+=========================================================
+*/
+
+function zurueck() {
+
+    document.getElementById("trainer").style.display = "none";
+
+    document.getElementById("ende").style.display = "none";
+
+    document.getElementById("start").style.display = "block";
+}
+
+
+/*
+=========================================================
+MISCHEN
+=========================================================
+*/
+
+function mischen(array) {
+
+    for (let i = array.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[j]] =
+        [array[j], array[i]];
+    }
+}
+
+</script>
+
+</body>
+</html>
